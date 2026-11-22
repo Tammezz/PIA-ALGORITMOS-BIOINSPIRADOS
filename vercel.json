@@ -1,8 +1,7 @@
 {
   "services": {
     "frontend": {
-      "root": "static/",
-      "framework": "static"
+      "root": "static/"
     }
   },
   "rewrites": [
