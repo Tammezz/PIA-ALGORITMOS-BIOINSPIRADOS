@@ -96,6 +96,35 @@ Abre en tu navegador: **`http://localhost:8501`**.
 
 ---
 
+## 🌐 Despliegue público (Render + Vercel)
+
+La arquitectura recomendada separa la API y el frontend, sin exponer la llave:
+
+- **Render** ejecuta `server.py` (FastAPI): sirve la API REST y, de paso, la SPA.
+  El archivo `render.yaml` define el servicio; la variable `ORS_API_KEY` se introduce
+  en el dashboard de Render (**nunca** en GitHub).
+- **Vercel** publica el frontend estático de `static/` y redirige `/api/*` al servicio
+  de Render mediante las rewrites de `vercel.json`, así que el navegador no necesita
+  saber la URL del backend ni hay problemas de CORS.
+
+### 1. Render (API)
+1. Entra en [Render Dashboard](https://dashboard.render.com) → **New → Blueprint**.
+2. Conecta el repositorio `Tammezz/PIA-ALGORITMOS-BIOINSPIRADOS` y aplica `render.yaml`.
+3. Cuando te pida `ORS_API_KEY`, pega tu clave gratuita de OpenRouteService.
+4. Render creará `https://aco-maps.onrender.com`. Comprueba `/api/status`: debe devolver
+   `"api_key_configurada": true`.
+
+### 2. Vercel (frontend)
+1. Entra en [Vercel](https://vercel.com/new) → **Import Git Repository** y selecciona el mismo repo.
+2. Vercel detectará `vercel.json` y publicará `static/` como raíz del sitio.
+3. Si el nombre del servicio de Render termina siendo distinto a `aco-maps`, edita la URL en
+   `vercel.json` → `rewrites[0].destination`.
+4. El sitio público quedará en `https://<tu-proyecto>.vercel.app`.
+
+> La SPA usa rutas relativas (`/api/...`), por lo que funciona igual en local, en Render y en Vercel.
+
+---
+
 ## 🧪 Pruebas y Validación (ACO vs. Fuerza Bruta)
 
 Para verificar que el algoritmo de Colonia de Hormigas encuentra la solución global exacta, ejecuta el script de pruebas automatizadas:

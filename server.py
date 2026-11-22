@@ -7,6 +7,7 @@ Expone una API REST moderna y sirve la aplicación web optimizada estilo Liquid 
 import os
 from typing import List, Optional, Union
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
@@ -22,6 +23,16 @@ from ors_client import (
 from aco import resolver_tsp_aco, calcular_costo_ruta
 
 app = FastAPI(title="ACO Maps - Liquid Glass Web API", version="2.0.0")
+
+# Permite que el frontend publicado en Vercel pueda llamar a la API de Render
+# también de forma directa (las rewrites de Vercel ya lo hacen same-origin).
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Esquemas de entrada y salida
 class LugarEntrada(BaseModel):

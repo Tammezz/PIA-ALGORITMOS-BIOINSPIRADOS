@@ -1,0 +1,13 @@
+{
+  "outputDirectory": "static",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://aco-maps.onrender.com/api/$1"
+    },
+    {
+      "source": "/static/(.*)",
+      "destination": "/$1"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+# Render Blueprint: despliega la API y la SPA en un solo servicio.
+# La API key NO se guarda aquí: se configura como variable de entorno en Render.
+services:
+  - type: web
+    name: aco-maps
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn server:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /api/status
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: ORS_API_KEY
+        sync: false # Se introduce en el dashboard de Render; nunca en GitHub
