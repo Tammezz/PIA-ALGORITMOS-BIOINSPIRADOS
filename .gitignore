@@ -231,3 +231,4 @@ notebooks/entrenamiento.ipynb
 .cache/
 .venv/
 
+.vercel
