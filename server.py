@@ -47,6 +47,32 @@ def status_api():
     }
 
 
+@app.get("/api/autocompletar")
+def autocompletar(q: str = ""):
+    """Devuelve sugerencias de lugares en tiempo real para autocompletado."""
+    from ors_client import autocompletar_lugares
+    sugerencias = autocompletar_lugares(q)
+    return {"sugerencias": sugerencias}
+
+
+@app.get("/api/reverso")
+def reverso(lat: float, lon: float):
+    """Obtiene el nombre de un lugar al hacer clic en el mapa."""
+    from ors_client import geocodificar_inverso
+    lugar = geocodificar_inverso(lat, lon)
+    return {"lugar": lugar}
+
+
+@app.get("/api/buscar")
+def buscar_punto(q: str = ""):
+    """Resuelve un lugar a sus coordenadas exactas."""
+    try:
+        info = geocodificar_lugar(q)
+        return {"ok": True, "lugar": info}
+    except ORSError as err:
+        raise HTTPException(status_code=400, detail=str(err))
+
+
 @app.post("/api/optimizar")
 def optimizar_ruta(req: PeticionOptimizacion):
     """

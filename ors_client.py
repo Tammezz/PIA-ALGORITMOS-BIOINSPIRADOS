@@ -172,6 +172,93 @@ def geocodificar_lugar(texto: str, api_key: Optional[str] = None) -> Dict[str, A
     }
 
 
+def autocompletar_lugares(texto: str, api_key: Optional[str] = None) -> List[Dict[str, Any]]:
+    """
+    Entrega sugerencias de autocompletado en tiempo real mientras el usuario escribe.
+    Sesgo enfocado hacia Monterrey y México.
+    """
+    texto = texto.strip()
+    if not texto or len(texto) < 2:
+        return []
+
+    # Si es coordenada directa, no autocompletar en la API
+    if es_coordenada_numerica(texto):
+        return []
+
+    if api_key is None:
+        api_key = obtener_api_key()
+
+    url = f"{BASE_URL}/geocode/autocomplete"
+    headers = {"Authorization": api_key}
+    params = {
+        "text": texto,
+        "boundary.country": "MX",
+        "focus.point.lat": 25.67,
+        "focus.point.lon": -100.31,
+    }
+
+    try:
+        response = requests.get(url, headers=headers, params=params, timeout=6)
+        if response.status_code != 200:
+            return []
+        data = response.json()
+        features = data.get("features", [])
+        
+        resultados = []
+        for feat in features[:6]:
+            coords = feat["geometry"]["coordinates"]
+            label = feat.get("properties", {}).get("label", texto)
+            resultados.append({
+                "nombre": label,
+                "lat": coords[1],
+                "lon": coords[0],
+                "coords_ors": [coords[0], coords[1]],
+            })
+        return resultados
+    except Exception:
+        return []
+
+
+def geocodificar_inverso(lat: float, lon: float, api_key: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Obtiene el nombre de la calle o lugar a partir de coordenadas geográficas (al hacer clic en el mapa).
+    """
+    if api_key is None:
+        api_key = obtener_api_key()
+
+    url = f"{BASE_URL}/geocode/reverse"
+    headers = {"Authorization": api_key}
+    params = {
+        "point.lat": lat,
+        "point.lon": lon,
+        "size": 1,
+    }
+
+    try:
+        response = requests.get(url, headers=headers, params=params, timeout=8)
+        if response.status_code == 200:
+            data = response.json()
+            features = data.get("features", [])
+            if features:
+                label = features[0].get("properties", {}).get("label", f"Punto ({lat:.4f}, {lon:.4f})")
+                return {
+                    "nombre": label,
+                    "lat": lat,
+                    "lon": lon,
+                    "coords_ors": [lon, lat],
+                }
+    except Exception:
+        pass
+
+    # Fallback si no hay conexión o no hay respuesta
+    return {
+        "nombre": f"Punto ({lat:.4f}, {lon:.4f})",
+        "lat": lat,
+        "lon": lon,
+        "coords_ors": [lon, lat],
+    }
+
+
 def obtener_matriz_tiempos(coords_ors: List[List[float]], api_key: Optional[str] = None) -> np.ndarray:
     """
     Obtiene la matriz de tiempos de conducción en segundos entre todos los puntos.

@@ -121,26 +121,130 @@ function initChart() {
    EVENT LISTENERS Y VINCULACIÓN DE CONTROLES
    ========================================================================== */
 function initEventListeners() {
-    // Input de agregar lugar
     const inputLugar = document.getElementById("inputLugar");
     const btnAgregar = document.getElementById("btnAgregarLugar");
+    const suggestionsBox = document.getElementById("suggestionsBox");
 
-    const agregarAccion = () => {
-        const val = inputLugar.value.trim();
-        if (val) {
-            if (state.lugares.length >= 25) {
-                showToast("Máximo 25 lugares permitidos por el plan gratuito.", "⚠️");
-                return;
-            }
-            state.lugares.push(val);
-            inputLugar.value = "";
-            renderLugaresList();
+    // Autocompletado en tiempo real con debounce
+    let debounceTimer = null;
+    inputLugar.addEventListener("input", () => {
+        clearTimeout(debounceTimer);
+        const query = inputLugar.value.trim();
+
+        if (query.length < 2) {
+            suggestionsBox.innerHTML = "";
+            suggestionsBox.classList.remove("show");
+            return;
         }
+
+        debounceTimer = setTimeout(async () => {
+            try {
+                const resp = await fetch(`/api/autocompletar?q=${encodeURIComponent(query)}`);
+                const data = await resp.json();
+                renderSuggestions(data.sugerencias || []);
+            } catch (_) {}
+        }, 250);
+    });
+
+    function renderSuggestions(sugerencias) {
+        suggestionsBox.innerHTML = "";
+        if (!sugerencias || sugerencias.length === 0) {
+            suggestionsBox.classList.remove("show");
+            return;
+        }
+
+        sugerencias.forEach((sug) => {
+            const div = document.createElement("div");
+            div.className = "suggestion-item";
+            div.innerHTML = `
+                <span class="suggestion-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                </span>
+                <span class="suggestion-text">${sug.nombre}</span>
+            `;
+
+            div.addEventListener("click", () => {
+                agregarLugarDirecto(sug.nombre, sug.lat, sug.lon);
+                inputLugar.value = "";
+                suggestionsBox.innerHTML = "";
+                suggestionsBox.classList.remove("show");
+            });
+
+            suggestionsBox.appendChild(div);
+        });
+
+        suggestionsBox.classList.add("show");
+    }
+
+    // Cerrar sugerencias al hacer clic fuera
+    document.addEventListener("click", (e) => {
+        if (!e.target.closest(".search-wrapper")) {
+            suggestionsBox.classList.remove("show");
+        }
+    });
+
+    // Agregar lugar manual (Enter o botón +)
+    const agregarAccion = async () => {
+        const val = inputLugar.value.trim();
+        if (!val) return;
+
+        if (state.lugares.length >= 25) {
+            showToast("Máximo 25 lugares permitidos.", "⚠️");
+            return;
+        }
+
+        suggestionsBox.classList.remove("show");
+        showToast("Verificando ubicación...", "🔍");
+
+        try {
+            const res = await fetch(`/api/buscar?q=${encodeURIComponent(val)}`);
+            const data = await res.json();
+            if (data.ok && data.lugar) {
+                agregarLugarDirecto(data.lugar.nombre, data.lugar.lat, data.lugar.lon);
+            } else {
+                agregarLugarDirecto(val);
+            }
+        } catch (_) {
+            agregarLugarDirecto(val);
+        }
+
+        inputLugar.value = "";
     };
 
     btnAgregar.addEventListener("click", agregarAccion);
     inputLugar.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") agregarAccion();
+        if (e.key === "Enter") {
+            // Si hay sugerencias visibles, tomar la primera
+            const primeraSugerencia = suggestionsBox.querySelector(".suggestion-item");
+            if (primeraSugerencia) {
+                primeraSugerencia.click();
+            } else {
+                agregarAccion();
+            }
+        }
+    });
+
+    // Clic en el mapa para añadir cualquier punto con detección inversa
+    state.map.on("click", async (e) => {
+        if (state.lugares.length >= 25) {
+            showToast("Máximo 25 lugares permitidos.", "⚠️");
+            return;
+        }
+
+        const { lat, lng } = e.latlng;
+        showToast("Detectando dirección del punto...", "📍");
+
+        try {
+            const resp = await fetch(`/api/reverso?lat=${lat}&lon=${lng}`);
+            const data = await resp.json();
+            const nombre = data.lugar ? data.lugar.nombre : `Punto (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+            agregarLugarDirecto(nombre, lat, lng);
+            showToast(`Añadido: ${nombre}`, "✓");
+        } catch (_) {
+            const coordStr = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            agregarLugarDirecto(coordStr, lat, lng);
+            showToast(`Añadido: ${coordStr}`, "✓");
+        }
     });
 
     // Botones de presets
@@ -168,6 +272,24 @@ function initEventListeners() {
 
     // Botón de cálculo de ruta
     document.getElementById("btnCalcular").addEventListener("click", ejecutarOptimizacion);
+}
+
+function agregarLugarDirecto(nombre, lat = null, lon = null) {
+    state.lugares.push(nombre);
+    renderLugaresList();
+
+    if (lat !== null && lon !== null) {
+        // Colocar un marcador de confirmación y centrar
+        const marker = L.circleMarker([lat, lon], {
+            radius: 8,
+            color: "#00f2fe",
+            weight: 2,
+            fillColor: "#00f2fe",
+            fillOpacity: 0.8
+        }).bindPopup(nombre).addTo(state.markersLayer);
+        
+        state.map.setView([lat, lon], Math.max(state.map.getZoom(), 13), { animate: true });
+    }
 }
 
 function bindSlider(sliderId, labelId) {
