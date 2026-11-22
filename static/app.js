@@ -15,13 +15,52 @@ const DEFAULT_MTY_PLACES = [
 
 // Estado global de la aplicación
 const state = {
-    lugares: [...DEFAULT_MTY_PLACES],
+    // Cada lugar conserva la dirección resuelta y sus coordenadas para no volver a geocodificarlo
+    lugares: DEFAULT_MTY_PLACES.map((nombre) => crearLugar(nombre)),
     map: null,
+    mapaClaro: false,
     markersLayer: null,
     routesLayer: null,
     chart: null,
     isCalculating: false
 };
+
+// Normaliza un lugar. Si no trae coordenadas, el servidor lo geocodificará al calcular.
+function crearLugar(nombre, lat = null, lon = null) {
+    return {
+        nombre: String(nombre).trim(),
+        lat: lat === null || lat === undefined ? null : Number(lat),
+        lon: lon === null || lon === undefined ? null : Number(lon)
+    };
+}
+
+// Escapa texto devuelto por ORS antes de insertarlo en el DOM
+function escapeHtml(texto) {
+    return String(texto).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[c]);
+}
+
+// Fuente cartográfica 100% libre: OpenStreetMap. Sin cuentas, llaves ni marcas de agua.
+function crearCapaMosaicos() {
+    return L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    });
+}
+
+function aplicarEstiloMapa(claro) {
+    state.mapaClaro = claro;
+    // El tema oscuro se logra con el filtro CSS; el claro muestra OSM tal cual.
+    document.getElementById("map").classList.toggle("mapa-claro", claro);
+
+    const boton = document.getElementById("btnToggleMapa");
+    if (boton) {
+        boton.querySelectorAll("span")[0].textContent = claro ? "☀️" : "🌙";
+        boton.querySelectorAll("span")[1].textContent = claro ? "Mapa claro" : "Mapa oscuro";
+        boton.title = claro ? "Cambiar a mapa oscuro" : "Cambiar a mapa claro";
+    }
+}
 
 // Inicialización cuando carga el DOM
 document.addEventListener("DOMContentLoaded", () => {
@@ -39,14 +78,12 @@ function initMap() {
     // Coordenadas iniciales: Monterrey, México
     state.map = L.map("map", {
         zoomControl: false,
-        attributionControl: false
+        attributionControl: true
     }).setView([25.67, -100.31], 12);
 
-    // Mosaicos gratuitos de OpenStreetMap con estilo Liquid Glass Dark (100% libre, sin marca de agua ni API Key requerida)
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(state.map);
+    // Mosaicos OpenStreetMap: el filtro de inversión tonal se aplica vía CSS
+    crearCapaMosaicos().addTo(state.map);
+    aplicarEstiloMapa(false);
 
     // Controles de zoom abajo a la izquierda para no estorbar con el top nav
     L.control.zoom({ position: "bottomleft" }).addTo(state.map);
@@ -160,7 +197,7 @@ function initEventListeners() {
                 <span class="suggestion-icon">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 </span>
-                <span class="suggestion-text">${sug.nombre}</span>
+                <span class="suggestion-text">${escapeHtml(sug.nombre)}</span>
             `;
 
             div.addEventListener("click", () => {
@@ -247,9 +284,14 @@ function initEventListeners() {
         }
     });
 
+    // Alternar estilo del mapa (claro / oscuro)
+    document.getElementById("btnToggleMapa").addEventListener("click", () => {
+        aplicarEstiloMapa(!state.mapaClaro);
+    });
+
     // Botones de presets
     document.getElementById("btnPresetMty").addEventListener("click", () => {
-        state.lugares = [...DEFAULT_MTY_PLACES];
+        state.lugares = DEFAULT_MTY_PLACES.map((nombre) => crearLugar(nombre));
         renderLugaresList();
         showToast("Plantilla de Monterrey cargada.", "📍");
     });
@@ -275,20 +317,21 @@ function initEventListeners() {
 }
 
 function agregarLugarDirecto(nombre, lat = null, lon = null) {
-    state.lugares.push(nombre);
+    const lugar = crearLugar(nombre, lat, lon);
+    state.lugares.push(lugar);
     renderLugaresList();
 
-    if (lat !== null && lon !== null) {
+    if (lugar.lat !== null && lugar.lon !== null) {
         // Colocar un marcador de confirmación y centrar
-        const marker = L.circleMarker([lat, lon], {
+        const marker = L.circleMarker([lugar.lat, lugar.lon], {
             radius: 8,
             color: "#00f2fe",
             weight: 2,
             fillColor: "#00f2fe",
             fillOpacity: 0.8
-        }).bindPopup(nombre).addTo(state.markersLayer);
-        
-        state.map.setView([lat, lon], Math.max(state.map.getZoom(), 13), { animate: true });
+        }).bindPopup(escapeHtml(lugar.nombre)).addTo(state.markersLayer);
+
+        state.map.setView([lugar.lat, lugar.lon], Math.max(state.map.getZoom(), 13), { animate: true });
     }
 }
 
@@ -318,10 +361,11 @@ function renderLugaresList() {
     state.lugares.forEach((lugar, idx) => {
         const item = document.createElement("div");
         item.className = `lugar-item ${idx === 0 ? "origen" : ""}`;
+        const nombreSeguro = escapeHtml(lugar.nombre);
         item.innerHTML = `
             <div class="lugar-info">
                 <span class="lugar-num">${idx + 1}</span>
-                <span class="lugar-nombre" title="${lugar}">${lugar}</span>
+                <span class="lugar-nombre" title="${nombreSeguro}">${nombreSeguro}</span>
             </div>
             <button class="lugar-delete-btn" data-index="${idx}" title="Eliminar">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -353,6 +397,7 @@ async function ejecutarOptimizacion() {
     showLoader(true, "Geocodificando y consultando matriz de tiempos...");
 
     const payload = {
+        // Se envían los lugares con la dirección y coordenadas ya resueltas
         lugares: state.lugares,
         regresar_inicio: document.getElementById("checkRegresar").checked,
         n_hormigas: parseInt(document.getElementById("paramHormigas").value),
@@ -394,6 +439,18 @@ async function ejecutarOptimizacion() {
 function renderResultados(data) {
     const { metricas, secuencia, geometria_ruta, historial_convergencia } = data;
 
+    // Mostrar en la lista las direcciones definitivas devueltas por ORS
+    // (para el texto que el usuario escribió y que no traía coordenadas)
+    const resueltosPorIndice = new Map();
+    secuencia.forEach((item) => {
+        if (!resueltosPorIndice.has(item.indice)) resueltosPorIndice.set(item.indice, item);
+    });
+    state.lugares = state.lugares.map((lugar, idx) => {
+        const resuelto = resueltosPorIndice.get(idx);
+        return resuelto ? crearLugar(resuelto.nombre, resuelto.lat, resuelto.lon) : lugar;
+    });
+    renderLugaresList();
+
     // 1. Actualizar métricas numéricas
     document.getElementById("statTiempoAco").innerHTML = `${metricas.tiempo_aco_min} <small>min</small>`;
     document.getElementById("statTiempoOrig").innerHTML = `${metricas.tiempo_original_min} <small>min</small>`;
@@ -422,7 +479,7 @@ function renderResultados(data) {
 
         div.innerHTML = `
             <span class="step-badge ${badgeClass}">${badgeText}</span>
-            <span class="step-name" title="${item.nombre}">${item.nombre}</span>
+            <span class="step-name" title="${escapeHtml(item.nombre)}">${escapeHtml(item.nombre)}</span>
         `;
         containerItinerary.appendChild(div);
     });
@@ -502,7 +559,7 @@ function renderResultados(data) {
                     ${item.es_origen ? "Punto de Partida" : `Parada #${item.paso}`}
                 </div>
                 <div style="font-weight: 600; color: #38bdf8; margin-top: 2px;">
-                    ${item.nombre}
+                    ${escapeHtml(item.nombre)}
                 </div>
             </div>
         `;

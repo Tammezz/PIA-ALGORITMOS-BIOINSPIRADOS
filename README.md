@@ -10,7 +10,7 @@ Diseñada con una interfaz moderna y estética **Liquid Glass Black** (Dark Glas
 
 - **Algoritmo ACO Puro desde Cero**: Implementado en NumPy sin librerías externas de optimización ni sobreingeniería.
 - **Datos Viales Reales**: Geocodificación y cálculo de tiempos reales de manejo con la API gratuita de OpenRouteService con sesgo a Monterrey y México.
-- **Visualización Cartográfica Interactiva**: Mapa con Folium en modo oscuro (`CartoDB dark_matter`), marcadores numerados por orden de visita y trazado exacto de las calles.
+- **Visualización Cartográfica Interactiva**: Mapa con mosaicos de **OpenStreetMap** (100% libres, sin cuentas ni marcas de agua) y filtro CSS de inversión tonal integrado en el tema Liquid Glass Black. Botón en la barra superior para alternar entre OSM oscuro y OSM claro. Marcadores numerados por orden de visita y trazado exacto de las calles. La única API Key del proyecto es la de OpenRouteService.
 - **Comparativa de Rendimiento**: Muestra la mejora porcentual y los minutos ahorrados entre el orden ingresado originalmente por el usuario vs. el orden óptimo de ACO.
 - **Gráfica de Convergencia**: Curva de evolución de la mejor solución por época generada con Matplotlib.
 - **Caché Local Inteligente**: Guarda las matrices de tiempos en disco (`.cache/`) mediante hash SHA-256 para proteger y no agotar la cuota gratuita de la API.

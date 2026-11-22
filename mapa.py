@@ -7,7 +7,6 @@ para cada parada y aplica una estética moderna acorde al estilo Liquid Glass Bl
 
 from typing import List, Dict, Any, Tuple
 import folium
-from folium.plugins import BeautifyIcon
 
 
 def crear_mapa_ruta(
@@ -29,7 +28,8 @@ def crear_mapa_ruta(
     regresar_al_origen : bool
         Indica si la ruta regresa al inicio.
     estilo_oscuro : bool
-        Si es True, utiliza mosaicos 'CartoDB dark_matter' para el estilo Liquid Glass Black.
+        Si es True, el tema oscuro se aplica con filtros CSS sobre OpenStreetMap.
+        La fuente cartográfica es siempre OSM: sin llaves ni marcas de agua.
 
     Retorna:
     --------
@@ -43,11 +43,12 @@ def crear_mapa_ruta(
     centro_lat = sum(p["lat"] for p in puntos_ordenados) / len(puntos_ordenados)
     centro_lon = sum(p["lon"] for p in puntos_ordenados) / len(puntos_ordenados)
 
-    # Mosaico base gratuito y sin marcas de agua de OpenStreetMap
+    # OpenStreetMap: 100% libre, sin cuentas ni marcas de agua.
     mapa = folium.Map(
         location=[centro_lat, centro_lon],
         zoom_start=12,
         tiles="OpenStreetMap",
+        attr="© OpenStreetMap contributors",
         control_scale=True,
     )
 

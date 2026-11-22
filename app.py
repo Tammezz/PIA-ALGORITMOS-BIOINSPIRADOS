@@ -200,6 +200,11 @@ header[data-testid="stHeader"] {
     box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2) !important;
 }
 
+/* Tema oscuro sobre mosaicos OpenStreetMap (sin marcas de agua) */
+.leaflet-tile-pane {
+    filter: invert(100%) hue-rotate(180deg) brightness(85%) contrast(110%) !important;
+}
+
 /* Contenedor del mapa en Folium */
 [data-testid="stCustomComponentV1"] {
     border-radius: 20px !important;

@@ -7,10 +7,12 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+import ors_client
 from ors_client import (
     obtener_api_key,
     geocodificar_lugar,
     obtener_matriz_tiempos,
+    resolver_texto_a_lugar,
     ORSError,
     es_coordenada_numerica,
 )
@@ -35,6 +37,24 @@ def test_coordenadas_directas():
     print("✓ Parser de coordenadas numéricas funciona y mantiene [lon, lat] para ORS.")
 
 
+def test_resolver_coordenadas_a_direccion():
+    """Una coordenada escrita debe resolverse a una dirección legible (sin consumir API)."""
+    direccion_falsa = {
+        "nombre": "Av. Cuauhtémoc 123, Monterrey, Nuevo León",
+        "lat": 25.67,
+        "lon": -100.31,
+        "coords_ors": [-100.31, 25.67],
+    }
+    original = ors_client.geocodificar_inverso
+    ors_client.geocodificar_inverso = lambda lat, lon, api_key=None: direccion_falsa
+    try:
+        res = resolver_texto_a_lugar("25.6700, -100.3100", api_key="dummy")
+        assert res == direccion_falsa, f"Fallo al resolver dirección inversa: {res}"
+        print("✓ Coordenadas escritas se resuelven a una dirección real.")
+    finally:
+        ors_client.geocodificar_inverso = original
+
+
 def test_limite_25_puntos():
     """Valida que se rechace una matriz de más de 25 puntos."""
     puntos_excedidos = [[-100.3, 25.6]] * 26
@@ -48,5 +68,6 @@ def test_limite_25_puntos():
 if __name__ == "__main__":
     test_sin_llave()
     test_coordenadas_directas()
+    test_resolver_coordenadas_a_direccion()
     test_limite_25_puntos()
     print("¡Todas las validaciones de manejo de errores pasaron con éxito!")

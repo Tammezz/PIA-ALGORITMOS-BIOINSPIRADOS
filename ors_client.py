@@ -17,7 +17,10 @@ from dotenv import load_dotenv
 # Cargar variables de entorno desde el archivo .env
 load_dotenv()
 
-BASE_URL = "https://api.openrouteservice.org"
+# Desde 2026-11-24 api.openrouteservice.org dejó de estar disponible.
+# La migración oficial de HeiGIT mantiene los mismos servicios bajo estas rutas:
+#   geocodificación -> /pelias/v1  |  matrix y directions -> /openrouteservice/v2
+BASE_URL = "https://api.heigit.org"
 CACHE_DIR = ".cache"
 
 
@@ -111,7 +114,7 @@ def geocodificar_lugar(texto: str, api_key: Optional[str] = None) -> Dict[str, A
     if api_key is None:
         api_key = obtener_api_key()
 
-    url = f"{BASE_URL}/geocode/search"
+    url = f"{BASE_URL}/pelias/v1/search"
     headers = {"Authorization": api_key}
     params = {
         "text": texto,
@@ -188,7 +191,7 @@ def autocompletar_lugares(texto: str, api_key: Optional[str] = None) -> List[Dic
     if api_key is None:
         api_key = obtener_api_key()
 
-    url = f"{BASE_URL}/geocode/autocomplete"
+    url = f"{BASE_URL}/pelias/v1/autocomplete"
     headers = {"Authorization": api_key}
     params = {
         "text": texto,
@@ -226,7 +229,7 @@ def geocodificar_inverso(lat: float, lon: float, api_key: Optional[str] = None) 
     if api_key is None:
         api_key = obtener_api_key()
 
-    url = f"{BASE_URL}/geocode/reverse"
+    url = f"{BASE_URL}/pelias/v1/reverse"
     headers = {"Authorization": api_key}
     params = {
         "point.lat": lat,
@@ -257,6 +260,26 @@ def geocodificar_inverso(lat: float, lon: float, api_key: Optional[str] = None) 
         "lon": lon,
         "coords_ors": [lon, lat],
     }
+
+
+def resolver_texto_a_lugar(texto: str, api_key: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Resuelve lo que el usuario escribió en el buscador a un lugar con dirección legible.
+
+    - Si escribió un nombre, usa la geocodificación normal (sesgo Monterrey).
+    - Si escribió coordenadas 'lat, lon', usa geocodificación inversa para mostrar
+      la dirección real en la lista y en el itinerario, en lugar de 'Punto (lat, lon)'.
+
+    Siempre devuelve 'coords_ors' en formato [longitud, latitud].
+    """
+    coords_directas = es_coordenada_numerica(texto)
+    if coords_directas:
+        lat, lon = coords_directas
+        if api_key is None:
+            api_key = obtener_api_key()
+        return geocodificar_inverso(lat, lon, api_key)
+
+    return geocodificar_lugar(texto, api_key)
 
 
 def obtener_matriz_tiempos(coords_ors: List[List[float]], api_key: Optional[str] = None) -> np.ndarray:
@@ -296,7 +319,7 @@ def obtener_matriz_tiempos(coords_ors: List[List[float]], api_key: Optional[str]
     if api_key is None:
         api_key = obtener_api_key()
 
-    url = f"{BASE_URL}/v2/matrix/driving-car"
+    url = f"{BASE_URL}/openrouteservice/v2/matrix/driving-car"
     headers = {
         "Authorization": api_key,
         "Content-Type": "application/json",
@@ -357,7 +380,7 @@ def obtener_ruta_real(coords_ordenadas_ors: List[List[float]], api_key: Optional
     if api_key is None:
         api_key = obtener_api_key()
 
-    url = f"{BASE_URL}/v2/directions/driving-car/geojson"
+    url = f"{BASE_URL}/openrouteservice/v2/directions/driving-car/geojson"
     headers = {
         "Authorization": api_key,
         "Content-Type": "application/json",

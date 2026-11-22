@@ -5,7 +5,7 @@ Expone una API REST moderna y sirve la aplicación web optimizada estilo Liquid 
 """
 
 import os
-from typing import List, Optional
+from typing import List, Optional, Union
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from ors_client import (
     geocodificar_lugar,
+    resolver_texto_a_lugar,
     obtener_matriz_tiempos,
     obtener_ruta_real,
     obtener_api_key,
@@ -23,8 +24,18 @@ from aco import resolver_tsp_aco, calcular_costo_ruta
 app = FastAPI(title="ACO Maps - Liquid Glass Web API", version="2.0.0")
 
 # Esquemas de entrada y salida
+class LugarEntrada(BaseModel):
+    """Lugar ya resuelto por el buscador/autocompletado (evita volver a geocodificar el texto)."""
+    nombre: str = Field(..., description="Dirección o nombre exacto seleccionado por el usuario")
+    lat: Optional[float] = Field(None, description="Latitud resuelta")
+    lon: Optional[float] = Field(None, description="Longitud resuelta")
+
+
 class PeticionOptimizacion(BaseModel):
-    lugares: List[str] = Field(..., description="Lista de nombres o coordenadas 'lat, lon'")
+    # Se aceptan cadenas (compatibilidad con Streamlit) y objetos resueltos (SPA).
+    lugares: List[Union[str, LugarEntrada]] = Field(
+        ..., description="Lista de nombres, coordenadas 'lat, lon' o lugares resueltos"
+    )
     regresar_inicio: bool = Field(True, description="Si la ruta debe regresar al punto de partida")
     n_hormigas: int = Field(15, ge=2, le=100)
     epocas: int = Field(100, ge=5, le=500)
@@ -33,6 +44,42 @@ class PeticionOptimizacion(BaseModel):
     beta: float = Field(2.0, ge=0.1, le=10.0)
     q: float = Field(100.0, ge=1.0, le=1000.0)
     semilla: Optional[int] = Field(None, description="Semilla para reproducibilidad")
+
+
+def normalizar_lugares_entrada(lugares: List[Union[str, LugarEntrada]]):
+    """
+    Convierte la entrada mixta a información de lugares y coordenadas ORS.
+
+    Si el frontend envió lat/lon resueltos, se usan tal cual (y se reconstruye
+    'coords_ors' como [lon, lat] para garantizar el orden que exige la API).
+    Si no, se geocodifica el texto como se hacía originalmente.
+    """
+    lugares_info = []
+    coords_ors = []
+
+    for lugar in lugares:
+        if isinstance(lugar, str):
+            info = geocodificar_lugar(lugar)
+        else:
+            nombre = lugar.nombre.strip()
+            if not nombre:
+                raise ORSError("Se proporcionó un lugar sin dirección.")
+            if lugar.lat is None or lugar.lon is None:
+                info = geocodificar_lugar(nombre)
+            else:
+                if not (-90 <= lugar.lat <= 90 and -180 <= lugar.lon <= 180):
+                    raise ORSError(f"Coordenadas fuera de rango para '{nombre}'.")
+                info = {
+                    "nombre": nombre,
+                    "lat": float(lugar.lat),
+                    "lon": float(lugar.lon),
+                    "coords_ors": [float(lugar.lon), float(lugar.lat)],
+                }
+
+        lugares_info.append(info)
+        coords_ors.append(info["coords_ors"])
+
+    return lugares_info, coords_ors
 
 
 # Rutas API
@@ -67,7 +114,7 @@ def reverso(lat: float, lon: float):
 def buscar_punto(q: str = ""):
     """Resuelve un lugar a sus coordenadas exactas."""
     try:
-        info = geocodificar_lugar(q)
+        info = resolver_texto_a_lugar(q)
         return {"ok": True, "lugar": info}
     except ORSError as err:
         raise HTTPException(status_code=400, detail=str(err))
@@ -79,7 +126,14 @@ def optimizar_ruta(req: PeticionOptimizacion):
     Geocodifica los lugares, obtiene la matriz de tiempos vial, ejecuta ACO
     y entrega el trazado por calles con métricas comparativas.
     """
-    lineas_limpias = [l.strip() for l in req.lugares if l.strip()]
+    # Aceptamos tanto texto plano como lugares ya resueltos por el buscador
+    lineas_limpias = []
+    for lugar in req.lugares:
+        if isinstance(lugar, str):
+            if lugar.strip():
+                lineas_limpias.append(lugar.strip())
+        elif lugar.nombre.strip():
+            lineas_limpias.append(lugar)
 
     if len(lineas_limpias) < 2:
         raise HTTPException(
@@ -94,13 +148,8 @@ def optimizar_ruta(req: PeticionOptimizacion):
         )
 
     try:
-        # 1. Geocodificación
-        lugares_info = []
-        coords_ors = []
-        for texto in lineas_limpias:
-            info = geocodificar_lugar(texto)
-            lugares_info.append(info)
-            coords_ors.append(info["coords_ors"])
+        # 1. Usar las direcciones/coordenadas resueltas por el buscador (o geocodificar si no las hay)
+        lugares_info, coords_ors = normalizar_lugares_entrada(lineas_limpias)
 
         # 2. Matriz de duraciones (con caché local)
         matriz_duraciones = obtener_matriz_tiempos(coords_ors)
