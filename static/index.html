@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACO Maps · Liquid Glass Black Edition</title>
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐜</text></svg>">
+    
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Custom Liquid Glass CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <!-- Fondo dinámico con partículas sutiles y gradiente oscuro -->
+    <div class="ambient-glow"></div>
+
+    <!-- Barra Superior Flotante (Liquid Glass Top Pill) -->
+    <header class="top-nav">
+        <div class="nav-glass-pill">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <span class="title">ACO Maps</span>
+                    <span class="version-tag">LIQUID GLASS</span>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <button class="glass-pill-btn" id="btnPresetMty" title="Cargar 6 lugares emblemáticos de Monterrey">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    <span>Demo Monterrey</span>
+                </button>
+                <button class="glass-pill-btn" id="btnLimpiar" title="Limpiar lista">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                    <span>Limpiar</span>
+                </button>
+                <div class="status-indicator" id="apiStatusBadge">
+                    <span class="dot pulse"></span>
+                    <span class="status-text">ORS Conectado</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenedor Principal de la App -->
+    <main class="app-layout">
+        
+        <!-- Panel Izquierdo: Configuración y Puntos (Liquid Glass Sidebar Card) -->
+        <aside class="glass-sidebar" id="sidebarPanel">
+            
+            <!-- Barra de Búsqueda / Entrada de Lugares (Inspirada en la referencia con lupa) -->
+            <div class="glass-search-box">
+                <div class="search-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </div>
+                <input type="text" id="inputLugar" placeholder="Escribe un lugar o 'lat, lon' y presiona Enter..." autocomplete="off">
+                <button class="search-add-btn" id="btnAgregarLugar" title="Añadir a la lista">+</button>
+            </div>
+
+            <!-- Lista de Lugares Agregados -->
+            <div class="section-header">
+                <span class="section-title">DESTINOS DE LA RUTA</span>
+                <span class="badge-count" id="countLugares">0 / 25</span>
+            </div>
+
+            <div class="lugares-list-container" id="listaLugares">
+                <!-- Se llena dinámicamente con JS -->
+            </div>
+
+            <!-- Opciones y Toggles de ACO -->
+            <div class="options-group">
+                <label class="glass-switch-container">
+                    <span class="switch-label">Regresar al origen (Circuito)</span>
+                    <input type="checkbox" id="checkRegresar" checked>
+                    <span class="slider-toggle"></span>
+                </label>
+
+                <label class="glass-switch-container">
+                    <span class="switch-label">Semilla fija (Reproducibilidad)</span>
+                    <input type="checkbox" id="checkSemilla" checked>
+                    <span class="slider-toggle"></span>
+                </label>
+            </div>
+
+            <!-- Acordeón de Parámetros ACO -->
+            <details class="glass-accordion" id="acoParamsDetails">
+                <summary class="accordion-header">
+                    <div class="header-left">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        <span>Parámetros de Hormigas (ACO)</span>
+                    </div>
+                    <span class="chevron">▼</span>
+                </summary>
+                <div class="accordion-content">
+                    <div class="slider-row">
+                        <div class="slider-meta">
+                            <span>Hormigas (Ants)</span>
+                            <span class="slider-val" id="valHormigas">15</span>
+                        </div>
+                        <input type="range" id="paramHormigas" min="5" max="50" value="15" step="1">
+                    </div>
+
+                    <div class="slider-row">
+                        <div class="slider-meta">
+                            <span>Épocas (Epochs)</span>
+                            <span class="slider-val" id="valEpocas">100</span>
+                        </div>
+                        <input type="range" id="paramEpocas" min="20" max="300" value="100" step="10">
+                    </div>
+
+                    <div class="slider-row">
+                        <div class="slider-meta">
+                            <span>Evaporación (ρ)</span>
+                            <span class="slider-val" id="valEvaporacion">0.40</span>
+                        </div>
+                        <input type="range" id="paramEvaporacion" min="0.05" max="0.95" value="0.40" step="0.05">
+                    </div>
+
+                    <div class="slider-row">
+                        <div class="slider-meta">
+                            <span>Peso Feromona (α)</span>
+                            <span class="slider-val" id="valAlfa">1.0</span>
+                        </div>
+                        <input type="range" id="paramAlfa" min="0.0" max="5.0" value="1.0" step="0.1">
+                    </div>
+
+                    <div class="slider-row">
+                        <div class="slider-meta">
+                            <span>Visibilidad / Heurística (β)</span>
+                            <span class="slider-val" id="valBeta">2.0</span>
+                        </div>
+                        <input type="range" id="paramBeta" min="0.5" max="6.0" value="2.0" step="0.1">
+                    </div>
+
+                    <div class="slider-row">
+                        <div class="slider-meta">
+                            <span>Constante Q</span>
+                            <span class="slider-val" id="valQ">100</span>
+                        </div>
+                        <input type="range" id="paramQ" min="10" max="500" value="100" step="10">
+                    </div>
+                </div>
+            </details>
+
+            <!-- Botón Principal Glow -->
+            <button class="btn-primary-glow" id="btnCalcular">
+                <span class="btn-shimmer"></span>
+                <span class="btn-text">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    Calcular Ruta Óptima
+                </span>
+            </button>
+        </aside>
+
+        <!-- Centro: Mapa Interactivo Leaflet -->
+        <section class="map-wrapper">
+            <div id="map"></div>
+            
+            <!-- Overlay de carga líquida -->
+            <div class="glass-loader-overlay" id="loaderOverlay">
+                <div class="loader-glass-card">
+                    <div class="liquid-spinner"></div>
+                    <h3 class="loader-title">Optimizando con ACO...</h3>
+                    <p class="loader-desc" id="loaderStatusText">Consultando datos viales en OpenRouteService</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Panel Derecho: Resultados, Métricas y Gráfica (Glass Banner UI) -->
+        <aside class="glass-results-panel" id="resultsPanel">
+            
+            <!-- Banner Header idéntico a la referencia -->
+            <div class="liquid-glass-banner">
+                <div class="banner-highlight-dot"></div>
+                <div class="banner-title">LIQUID GLASS BANNER UI</div>
+                <div class="banner-subtitle">Optimización Metaheurística de Rutas</div>
+                <div class="banner-divider"></div>
+            </div>
+
+            <!-- Métricas Grid -->
+            <div class="metrics-grid">
+                <div class="glass-stat-card">
+                    <div class="stat-label">Tiempo ACO</div>
+                    <div class="stat-value highlight-cyan" id="statTiempoAco">-- <small>min</small></div>
+                    <div class="stat-sub">Ruta más rápida</div>
+                </div>
+
+                <div class="stat-card glass-stat-card">
+                    <div class="stat-label">Tiempo Original</div>
+                    <div class="stat-value" id="statTiempoOrig">-- <small>min</small></div>
+                    <div class="stat-sub">Orden sin optimizar</div>
+                </div>
+
+                <div class="stat-card glass-stat-card">
+                    <div class="stat-label">Mejora / Ahorro</div>
+                    <div class="stat-value highlight-emerald" id="statMejoraPct">--%</div>
+                    <div class="stat-sub" id="statAhorroMin">-- min ahorrados</div>
+                </div>
+
+                <div class="stat-card glass-stat-card">
+                    <div class="stat-label">Distancia Vial</div>
+                    <div class="stat-value" id="statDistancia">-- <small>km</small></div>
+                    <div class="stat-sub">Sentidos reales</div>
+                </div>
+            </div>
+
+            <!-- Gráfica de Convergencia -->
+            <div class="chart-glass-container">
+                <div class="chart-header">
+                    <div class="chart-title">Convergencia de Hormigas</div>
+                    <span class="badge-mini">Por Época</span>
+                </div>
+                <div class="canvas-holder">
+                    <canvas id="chartConvergencia"></canvas>
+                </div>
+            </div>
+
+            <!-- Secuencia Óptima Detallada -->
+            <div class="itinerary-header">
+                <span>SECUENCIA DE VISITA ÓPTIMA</span>
+            </div>
+            <div class="itinerary-list" id="itineraryList">
+                <div class="empty-state">
+                    Presiona "Calcular Ruta Óptima" para visualizar el orden y trazado.
+                </div>
+            </div>
+
+        </aside>
+
+    </main>
+
+    <!-- Notificación Flotante Toast -->
+    <div class="glass-toast" id="glassToast">
+        <span class="toast-icon">ℹ️</span>
+        <span class="toast-message" id="toastMessage">Mensaje</span>
+    </div>
+
+    <!-- Scripts: Leaflet JS y Chart.js -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- App Logic -->
+    <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,932 @@
+/* ==========================================================================
+   ACO MAPS · LIQUID GLASS BLACK THEME
+   Inspirado en Dark Glassmorphism, controles táctiles y acabados especulares.
+   ========================================================================== */
+
+:root {
+    --bg-base: #06070a;
+    --glass-panel-bg: rgba(18, 22, 32, 0.65);
+    --glass-panel-border: rgba(255, 255, 255, 0.10);
+    --glass-panel-highlight: rgba(255, 255, 255, 0.28);
+    --glass-blur: blur(24px) saturate(180%);
+    
+    --accent-cyan: #00f2fe;
+    --accent-cyan-glow: rgba(0, 242, 254, 0.35);
+    --accent-blue: #38bdf8;
+    --accent-emerald: #10b981;
+    --accent-rose: #f43f5e;
+    
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    
+    --radius-pill: 9999px;
+    --radius-card: 20px;
+    --radius-sm: 12px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Fondo con iluminación ambiental líquida */
+.ambient-glow {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    background: 
+        radial-gradient(circle at 10% 20%, rgba(20, 35, 60, 0.45) 0%, transparent 45%),
+        radial-gradient(circle at 90% 80%, rgba(15, 23, 42, 0.5) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(0, 242, 254, 0.03) 0%, transparent 60%);
+}
+
+/* ==========================================================================
+   BARRA SUPERIOR (TOP NAV PILL)
+   ========================================================================== */
+.top-nav {
+    position: fixed;
+    top: 14px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.nav-glass-pill {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    background: rgba(14, 18, 27, 0.75);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-panel-border);
+    border-top: 1px solid var(--glass-panel-highlight);
+    border-radius: var(--radius-pill);
+    padding: 8px 18px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-cyan);
+}
+
+.brand-text {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.brand-text .title {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    color: #ffffff;
+}
+
+.brand-text .version-tag {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    color: var(--accent-blue);
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    padding: 2px 6px;
+    border-radius: 9999px;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.glass-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: var(--radius-pill);
+    padding: 6px 14px;
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-pill-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(56, 189, 248, 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    font-weight: 600;
+    color: #34d399;
+}
+
+.dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #34d399;
+}
+
+.dot.pulse {
+    box-shadow: 0 0 8px #34d399;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+/* ==========================================================================
+   LAYOUT PRINCIPAL
+   ========================================================================== */
+.app-layout {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    z-index: 10;
+}
+
+/* ==========================================================================
+   PANEL LATERAL IZQUIERDO (SIDEBAR GLASS CARD)
+   ========================================================================== */
+.glass-sidebar {
+    width: 380px;
+    min-width: 380px;
+    height: calc(100vh - 80px);
+    margin: 70px 0 0 16px;
+    background: var(--glass-panel-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-panel-border);
+    border-top: 1px solid var(--glass-panel-highlight);
+    border-radius: var(--radius-card);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    display: flex;
+    flex-direction: column;
+    padding: 18px;
+    z-index: 500;
+    overflow-y: auto;
+}
+
+/* Barra de Búsqueda estilo Lupa Liquid Glass */
+.glass-search-box {
+    display: flex;
+    align-items: center;
+    background: rgba(10, 14, 22, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: var(--radius-pill);
+    padding: 4px 6px 4px 14px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    transition: all 0.2s ease;
+}
+
+.glass-search-box:focus-within {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 16px var(--accent-cyan-glow), inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.search-icon {
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    margin-right: 8px;
+}
+
+.glass-search-box input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.glass-search-box input::placeholder {
+    color: var(--text-muted);
+}
+
+.search-add-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.search-add-btn:hover {
+    background: var(--accent-cyan);
+    color: #000000;
+    transform: scale(1.05);
+}
+
+/* Encabezado de Sección */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 18px 4px 10px 4px;
+}
+
+.section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+}
+
+.badge-count {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent-blue);
+    background: rgba(56, 189, 248, 0.1);
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+/* Lista de Lugares */
+.lugares-list-container {
+    flex: 1;
+    min-height: 140px;
+    max-height: 220px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding-right: 4px;
+}
+
+.lugar-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(14, 18, 27, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    transition: all 0.2s ease;
+}
+
+.lugar-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.lugar-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+}
+
+.lugar-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.lugar-item.origen .lugar-num {
+    background: var(--accent-emerald);
+    color: #ffffff;
+}
+
+.lugar-nombre {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lugar-delete-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s ease;
+}
+
+.lugar-delete-btn:hover {
+    color: var(--accent-rose);
+}
+
+/* Opciones Switches Liquid Glass */
+.options-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 14px 0;
+    padding: 10px;
+    background: rgba(10, 14, 22, 0.45);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-switch-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+}
+
+.switch-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.glass-switch-container input {
+    display: none;
+}
+
+.slider-toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius-pill);
+    transition: all 0.25s ease;
+}
+
+.slider-toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    background: #ffffff;
+    border-radius: 50%;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.glass-switch-container input:checked + .slider-toggle {
+    background: var(--accent-cyan);
+    border-color: var(--accent-cyan);
+}
+
+.glass-switch-container input:checked + .slider-toggle::after {
+    transform: translateX(16px);
+    background: #000000;
+}
+
+/* Acordeón de Parámetros */
+.glass-accordion {
+    margin-bottom: 14px;
+    background: rgba(10, 14, 22, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    cursor: pointer;
+    list-style: none;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: color 0.2s ease;
+}
+
+.accordion-header::-webkit-details-marker {
+    display: none;
+}
+
+.accordion-header:hover {
+    color: #ffffff;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chevron {
+    font-size: 9px;
+    transition: transform 0.2s ease;
+}
+
+.glass-accordion[open] .chevron {
+    transform: rotate(180deg);
+}
+
+.accordion-content {
+    padding: 10px 14px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.slider-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.slider-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.slider-val {
+    font-weight: 700;
+    color: var(--accent-cyan);
+}
+
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 9999px;
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ffffff;
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+    transition: transform 0.1s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    background: var(--accent-cyan);
+}
+
+/* Botón Principal Glow (Liquid Glass Shimmer Pill) */
+.btn-primary-glow {
+    position: relative;
+    width: 100%;
+    padding: 12px 20px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 100%);
+    background-color: rgba(14, 165, 233, 0.85);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: var(--radius-pill);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(14, 165, 233, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-primary-glow:hover {
+    background-color: rgba(2, 132, 199, 0.95);
+    box-shadow: 0 12px 30px rgba(0, 242, 254, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    transform: translateY(-2px);
+}
+
+.btn-primary-glow:active {
+    transform: translateY(0);
+}
+
+.btn-text {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    z-index: 2;
+}
+
+/* ==========================================================================
+   CENTRO: MAPA LEAFLET
+   ========================================================================== */
+.map-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-base);
+}
+
+/* Transformación Dark Mode estética para OpenStreetMap (100% libre, sin marcas de agua ni API key) */
+#map .leaflet-tile-pane {
+    filter: invert(100%) hue-rotate(180deg) brightness(85%) contrast(110%);
+}
+
+/* Overlay de Carga Líquida */
+.glass-loader-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(6, 7, 10, 0.7);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 900;
+}
+
+.loader-glass-card {
+    background: rgba(18, 22, 32, 0.85);
+    border: 1px solid var(--glass-panel-border);
+    border-top: 1px solid var(--glass-panel-highlight);
+    border-radius: var(--radius-card);
+    padding: 30px 40px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.liquid-spinner {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--accent-cyan);
+    animation: spin 0.9s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
+    margin-bottom: 16px;
+    box-shadow: 0 0 12px var(--accent-cyan-glow);
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loader-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+
+.loader-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   PANEL DERECHO: RESULTADOS (GLASS BANNER UI)
+   ========================================================================== */
+.glass-results-panel {
+    position: absolute;
+    top: 70px;
+    right: 16px;
+    width: 400px;
+    height: calc(100vh - 80px);
+    background: var(--glass-panel-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-panel-border);
+    border-top: 1px solid var(--glass-panel-highlight);
+    border-radius: var(--radius-card);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    padding: 20px;
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+/* Estilo Banner idéntico a la referencia del usuario */
+.liquid-glass-banner {
+    position: relative;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+}
+
+.banner-highlight-dot {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    box-shadow: 0 0 8px #ffffff;
+}
+
+.banner-title {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: #ffffff;
+    margin-left: 14px;
+}
+
+.banner-subtitle {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-left: 14px;
+    margin-top: 2px;
+}
+
+.banner-divider {
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+    margin-top: 12px;
+}
+
+/* Grid de Métricas */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.glass-stat-card {
+    background: rgba(10, 14, 22, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.stat-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-secondary);
+}
+
+.stat-value {
+    font-size: 20px;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 4px 0 2px 0;
+}
+
+.stat-value small {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.stat-value.highlight-cyan {
+    color: var(--accent-cyan);
+    text-shadow: 0 0 12px var(--accent-cyan-glow);
+}
+
+.stat-value.highlight-emerald {
+    color: var(--accent-emerald);
+}
+
+.stat-sub {
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+/* Gráfica de Convergencia Container */
+.chart-glass-container {
+    background: rgba(10, 14, 22, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    margin-bottom: 16px;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.chart-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.badge-mini {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--accent-blue);
+    background: rgba(56, 189, 248, 0.1);
+    padding: 2px 6px;
+    border-radius: 9999px;
+}
+
+.canvas-holder {
+    position: relative;
+    height: 140px;
+    width: 100%;
+}
+
+/* Itinerario */
+.itinerary-header {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.itinerary-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-right: 4px;
+}
+
+.itinerary-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(14, 18, 27, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 8px 10px;
+}
+
+.step-badge {
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #ffffff;
+    flex-shrink: 0;
+}
+
+.step-badge.origen {
+    background: var(--accent-emerald);
+}
+
+.step-badge.parada {
+    background: #6366f1;
+}
+
+.step-badge.retorno {
+    background: var(--accent-cyan);
+    color: #000000;
+}
+
+.step-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.empty-state {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 20px 10px;
+    background: rgba(10, 14, 22, 0.3);
+    border-radius: var(--radius-sm);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+/* Toast Flotante */
+.glass-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: rgba(18, 22, 32, 0.9);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-panel-border);
+    border-top: 1px solid var(--glass-panel-highlight);
+    border-radius: var(--radius-pill);
+    padding: 10px 22px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 2000;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+.glass-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+/* Scrollbars estilizadas Liquid Glass */
+::-webkit-scrollbar {
+    width: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-cyan);
+}
