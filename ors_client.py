@@ -115,7 +115,7 @@ def geocodificar_lugar(texto: str, api_key: Optional[str] = None) -> Dict[str, A
     headers = {"Authorization": api_key}
     params = {
         "text": texto,
-        "size": 1,
+        "size": 15,  # Pedimos múltiples candidatos para seleccionar el más relevante geográficamente
         "boundary.country": "MX",
         "focus.point.lat": 25.67,
         "focus.point.lon": -100.31,
@@ -136,7 +136,29 @@ def geocodificar_lugar(texto: str, api_key: Optional[str] = None) -> Dict[str, A
     if not features:
         raise ORSError(f"No se encontró ninguna ubicación para: '{texto}'. Intenta agregar 'Monterrey' o ser más específico.")
 
-    feat = features[0]
+    # Selección inteligente del mejor candidato:
+    # 1. Si el texto menciona Monterrey / Nuevo León, priorizar candidatos de esa región
+    texto_lower = texto.lower()
+    es_busqueda_mty = any(palabra in texto_lower for palabra in [
+        "monterrey", "mty", "san pedro", "guadalupe", "santa catarina",
+        "san nicolas", "escobedo", "apodaca", "nuevo leon", "nle"
+    ])
+
+    candidatos = features
+    if es_busqueda_mty:
+        filtrados_mty = [
+            f for f in features
+            if any(term in f.get("properties", {}).get("label", "").lower() for term in ["nuevo león", "nle", "monterrey", "garza garcia", "guadalupe", "san nicolas"])
+        ]
+        if filtrados_mty:
+            candidatos = filtrados_mty
+
+    # 2. Elegir el candidato más cercano al foco geográfico (evita enviar a Pachuca o Torreón)
+    def dist_foco(f):
+        c = f["geometry"]["coordinates"]  # [lon, lat]
+        return (c[1] - 25.67) ** 2 + (c[0] - (-100.31)) ** 2
+
+    feat = min(candidatos, key=dist_foco)
     coords = feat["geometry"]["coordinates"]  # [longitud, latitud]
     lon, lat = coords[0], coords[1]
     label = feat.get("properties", {}).get("label", texto)

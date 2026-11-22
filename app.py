@@ -218,9 +218,9 @@ st.markdown(CSS_LIQUID_GLASS, unsafe_allow_html=True)
 # =============================================================================
 LUGARES_DEFAULT_MTY = """Macroplaza, Monterrey
 Parque Fundidora, Monterrey
-Mirador del Obispado, Monterrey
-Tecnologico de Monterrey, Campus Monterrey
-San Pedro Garza Garcia Centro
+El Obispado, Monterrey
+Tecnologico de Monterrey, Monterrey
+San Pedro Garza Garcia, Nuevo Leon
 Basilica de Guadalupe, Monterrey"""
 
 

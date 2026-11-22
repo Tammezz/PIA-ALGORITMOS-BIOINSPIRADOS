@@ -7,9 +7,9 @@
 const DEFAULT_MTY_PLACES = [
     "Macroplaza, Monterrey",
     "Parque Fundidora, Monterrey",
-    "Mirador del Obispado, Monterrey",
-    "Tecnologico de Monterrey, Campus Monterrey",
-    "San Pedro Garza Garcia Centro",
+    "El Obispado, Monterrey",
+    "Tecnologico de Monterrey, Monterrey",
+    "San Pedro Garza Garcia, Nuevo Leon",
     "Basilica de Guadalupe, Monterrey"
 ];
 
